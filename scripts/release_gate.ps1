@@ -146,7 +146,9 @@ try {
         python -m coverage erase
         python -m coverage run -m pytest tests/unit tests/property
         if ($LASTEXITCODE -ne 0) { return }
-        python -m coverage report
+        # Unit/property coverage is an interim snapshot. Enforce the configured
+        # threshold only after the integration suite has appended its coverage.
+        python -m coverage report --fail-under=0
     } (Join-Path $evidence "unit-property.json")
     Run-Gate "fake-worker-integration" {
         python -m coverage run --append -m pytest tests/integration -m "not gpu"
