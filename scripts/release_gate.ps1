@@ -120,7 +120,16 @@ try {
     python scripts/verify_runtime.py $manifestPath
     if ($LASTEXITCODE -ne 0) { throw "runtime verification failed" }
     $semanticAcceptance = "accept" + "ed"
-    $forbiddenPattern = "$semanticAcceptance|expected_result|C:\Users|248068|248069|simulate_worker_crash|crash_for_test"
+    $forbiddenLiterals = @(
+        $semanticAcceptance,
+        "expected_result",
+        "C:\Users",
+        "248068",
+        "248069",
+        "simulate_worker_crash",
+        "crash_for_test"
+    )
+    $forbiddenPattern = ($forbiddenLiterals | ForEach-Object { [regex]::Escape($_) }) -join "|"
     $forbidden = rg -n $forbiddenPattern model_worker native
     if ($LASTEXITCODE -eq 0) { throw "forbidden production literal found:`n$forbidden" }
     if ($LASTEXITCODE -gt 1) { throw "production source audit failed" }
