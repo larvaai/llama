@@ -21,8 +21,17 @@ function Write-JsonFile([string]$Path, $Value) {
 
 function Run-Gate([string]$Name, [scriptblock]$Command, [string]$Artifact) {
     $started = [DateTimeOffset]::UtcNow
-    $output = & $Command 2>&1 | Out-String
-    $exitCode = $LASTEXITCODE
+    # Windows PowerShell 5 surfaces native stderr as non-terminating error
+    # records. The top-level Stop preference would otherwise abort a healthy
+    # command before its exit code can be inspected or its artifact written.
+    $previousErrorActionPreference = $ErrorActionPreference
+    try {
+        $ErrorActionPreference = "Continue"
+        $output = & $Command 2>&1 | Out-String
+        $exitCode = $LASTEXITCODE
+    } finally {
+        $ErrorActionPreference = $previousErrorActionPreference
+    }
     Write-JsonFile $Artifact @{
         gate = $Name
         status = $(if ($exitCode -eq 0) { "passed" } else { "failed" })
