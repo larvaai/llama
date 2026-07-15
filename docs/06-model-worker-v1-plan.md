@@ -6,6 +6,13 @@
 > nằm ở `09-inference-runtime-implementation-handoff.md`. File 08 chỉ còn là
 > historical artifact lúc bắt đầu M0.
 
+> **Release status (2026-07-16):** contract M0 trong tài liệu này đã được ký từ
+> clean revision `b38b6df32755c55e668ac11e6c8f3e8b1c2ad46b`. Xem
+> `model-worker-release.md` và
+> `release-evidence/b38b6df32755c55e668ac11e6c8f3e8b1c2ad46b/summary.json`. Nội dung
+> bên dưới tiếp tục là normative baseline; đổi manifest/runtime/model/native
+> identity phải chạy gate mới.
+
 ## 1. Quyết định phạm vi
 
 Mục tiêu của mốc tiếp theo là biến controlled-inference spike hiện tại thành một **single-model worker đáng tin cậy** trên llama.cpp.

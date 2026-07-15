@@ -2,6 +2,13 @@
 
 Ngày tạo: 2026-07-15.
 
+> Historical closure (2026-07-16): các gap và external gate mô tả dưới đây đã
+> được đóng. M0 được release-attest từ revision sạch
+> `b38b6df32755c55e668ac11e6c8f3e8b1c2ad46b`; consolidated summary nằm tại
+> `release-evidence/b38b6df32755c55e668ac11e6c8f3e8b1c2ad46b/summary.json`. Mọi chữ
+> “pending/chờ” còn lại trong file này mô tả checkpoint lịch sử 2026-07-15,
+> không phải trạng thái hiện hành. Xem `docs/09-inference-runtime-implementation-handoff.md`.
+
 Trạng thái: **historical artifact của checkpoint bắt đầu M0; đã được thay thế
 bởi `09-inference-runtime-implementation-handoff.md`**.
 

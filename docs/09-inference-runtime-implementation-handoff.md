@@ -1,14 +1,18 @@
 # Implementation checkpoint và handoff còn lại
 
-Ngày chốt: 2026-07-15.
+Ngày chốt engineering checkpoint: 2026-07-15. Cập nhật release: 2026-07-16.
 
-Trạng thái: **M3–M6 và H0 đạt engineering gate trên working tree dirty; M7
-đạt portable architecture gate; H1 atomic read-only vertical slice đã pass
-engineering checkpoint nhưng full H1 chưa được tuyên bố**.
+Trạng thái: **M0 đã release-attest từ clean revision; M1–M7 và H0 đạt
+engineering gate; M7 real-provider matrix vẫn là deployment gate; H1 atomic
+read-only vertical slice đã pass engineering checkpoint nhưng full H1 chưa được
+tuyên bố**.
 
-Đây không phải release attestation. M0 chỉ được ký sau khi người dùng review,
-cho phép commit và chạy consolidated release gate từ đúng revision sạch đó.
-Không tự commit, reset, clean hoặc ghi đè thay đổi hiện có.
+Runtime release attestation có thẩm quyền là revision
+`b38b6df32755c55e668ac11e6c8f3e8b1c2ad46b` cùng evidence tại
+`release-evidence/b38b6df32755c55e668ac11e6c8f3e8b1c2ad46b/`. Commit cập nhật docs sau
+gate là documentation-only; không đổi identity đã ký. Không tái sử dụng
+attestation nếu model manifest, runtime build, model digest hoặc native binary
+thay đổi.
 
 Semantics chuẩn của tool calling nằm ở section 5 và roadmap ở section 7 của
 `07-inference-runtime-and-agent-roadmap.md`. File này ghi checkpoint code/evidence
@@ -34,26 +38,35 @@ python -m pytest -m "not gpu and not soak" -q
 python -m ruff check .
 ~~~
 
-Working tree có nhiều thay đổi code/test/docs thuộc scope người dùng. Không
-reset, checkout, clean, reformat hàng loạt hoặc commit/push nếu chưa được yêu
-cầu rõ.
+Kỳ vọng handoff là working tree sạch sau commit tài liệu. Nếu có thay đổi mới,
+không reset, checkout, clean, reformat hàng loạt hoặc commit/push nếu chưa được
+yêu cầu rõ.
 
 ## 2. Checkpoint identity và evidence
 
 ~~~text
-Git HEAD:                    57ee5e82b6148b5bdf8698922ed77b93cfc8875d
-Working tree:                dirty
+Attested runtime revision:   b38b6df32755c55e668ac11e6c8f3e8b1c2ad46b
+Gate working tree:           clean
+Consolidated gate:           passed
 GPU:                         NVIDIA GeForce RTX 3080, 10240 MiB
 Driver:                      591.86
 Model:                       qwen35-9b-local, Q4_K_M
 llama.cpp build:             b10012
+Manifest SHA-256:             afb03af1a03f070be8ba51f076f286065ae3574e317eec7dd9587bb303a1ae2f
+Model SHA-256:                b68fbb8167d4e0a39c8157d87ea880a38d6c593c2d7b92c153212496f635eb46
+Native binary SHA-256:        d2dbb0f4a192e66e6c4d3381dcc9a03d30d5aa7dbec099c08ab03eb78ab6fd09
+Release summary SHA-256:      dabead013b42a5f901bbe5ac5ea7a481a9a6eb4812331886688ff5426c9c9bf5
 Inference runtime SHA-256:   9e4da794cf2a3cacec47a0cf0b6b4fb60e06e0ff42751ed745562f47c272750f
 Model worker SHA-256:        048da4064ab263f1460804c69f3630eec08df41ba90b14f6af85bc60ad1a5fe6
 ~~~
 
 Machine-readable index:
 
-`artifacts/inference-runtime/2026-07-15-m0-m7-final-verification.json`
+`artifacts/inference-runtime/2026-07-16-handoff-index.json`
+
+M0 release attestation:
+
+`artifacts/inference-runtime/2026-07-16-m0-release-attestation.json`
 
 Requirement traceability:
 
@@ -89,13 +102,16 @@ CTest:                        1/1 passed
 Native fault GPU slice:       2 passed in 40.92s
 Model semantic HTTP slice:    3 passed in 18.14s
 Inference sequence GPU suite: 5 passed in 86.34s
+Clean consolidated M0 gate:   passed at b38b6df32755c55e668ac11e6c8f3e8b1c2ad46b
+Release soak:                 500/500 passed, 0 failure, generation [2]
+Release latency p50/p95/max:  1.937/3.578/4.359 seconds
 ~~~
 
 Ba skip là Windows symlink privilege (một H1 scope-escape case và hai artifact
-cleanup cases). Các GPU/HTTP slice trên dirty tree là
-engineering evidence, không thay clean consolidated M0 release gate.
+cleanup cases). Các slice pre-release vẫn là engineering evidence; clean gate
+ngày 2026-07-16 là attestation riêng và đã pass đủ required gates.
 
-Completion audit còn đóng hai vấn đề evidence:
+Completion audit đã đóng các vấn đề evidence sau:
 
 - Continuous scheduler từng có lost-wakeup giữa action check và idle wait.
   Re-check dưới cùng condition lock đã sửa race; scheduler/governance focused
@@ -109,13 +125,18 @@ Completion audit còn đóng hai vấn đề evidence:
   fail được giữ để chẩn đoán. Soak có thẩm quyền dùng fixed slot shapes warm từ
   wave đầu và WDDM process counter, đạt 1.228 request với dedicated VRAM drift
   0 MiB.
+- Ba lần chạy clean gate đầu đã lộ lỗi ở chính release harness: literal
+  `C:\Users` chưa escape trong regex, coverage threshold bị enforce trước khi
+  append integration, và Windows PowerShell 5 coi native stderr warning là
+  terminating error. Các lỗi này lần lượt được sửa ở `aeac217`, `4f51232` và
+  `b38b6df`; gate cuối trên `b38b6df` chạy hết 1.332,4 giây và pass.
 
 ## 3. Trạng thái milestone
 
 | Mốc | Trạng thái hiện hành | Giới hạn còn lại |
 |---|---|---|
-| M0 | Functional/fault/semantic slices pass | Chờ revision sạch + consolidated recovery/500-request release gate |
-| M1 | Engineering pass | Release attestation kế thừa M0 |
+| M0 | **Released** tại `b38b6df32755c55e668ac11e6c8f3e8b1c2ad46b` | Gate lại khi model/runtime/native identity đổi |
+| M1 | Engineering pass trong cùng attested revision | Không |
 | M2 | Engineering pass | Không |
 | M3 | Engineering pass | Không |
 | M4 | Engineering pass | Tiếp tục profile workload mới |
@@ -438,11 +459,12 @@ thành gate bắt buộc.
 
 ## 10. Parallel track và ngoài scope
 
-Track release có thể chạy riêng sau khi người dùng review và cho phép commit:
+Track M0 release đã hoàn tất:
 
-1. Chốt revision sạch.
-2. Chạy `scripts/release_gate.ps1` từ đúng revision đó.
-3. Chỉ khi `summary.json` pass mới đổi M0 sang released.
+1. Revision sạch `b38b6df32755c55e668ac11e6c8f3e8b1c2ad46b` đã được chốt.
+2. `scripts/release_gate.ps1` đã chạy từ đúng revision/manifest/runtime đó.
+3. `summary.json` ghi `consolidated_release_gate=passed`; 500/500 soak, không
+   failure và resource series quan sát đúng restarted native child.
 
 Deployment M7 chạy khi có đúng môi trường:
 
@@ -461,8 +483,8 @@ Ngoài scope H1:
 Thứ tự cho session kế tiếp:
 
 1. Không viết lại read-only slice; verify source hash/evidence hiện có.
-2. Sau khi người dùng review và cho phép commit, chạy clean consolidated M0
-   release gate từ đúng revision/manifest/runtime.
-3. Đóng real-local-model acceptance artifact để nâng read-only checkpoint thành
+2. Đóng real-local-model acceptance artifact để nâng read-only checkpoint thành
    full H1.
-4. Chỉ mở mutation tools hoặc H2/H3 bằng một scope riêng và gate tương ứng.
+3. Chỉ mở mutation tools hoặc H2/H3 bằng một scope riêng và gate tương ứng.
+4. Nếu đổi model/runtime/native identity, tạo release revision và attestation
+   mới; không sửa hoặc tái gắn nhãn evidence của `b38b6df…`.

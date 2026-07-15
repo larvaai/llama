@@ -1,6 +1,6 @@
 # Session handoff index
 
-Ngày cập nhật: 2026-07-15.
+Ngày cập nhật: 2026-07-16.
 
 Tài liệu này là điểm vào cho session mới. Nó không chứa implementation plan
 chi tiết; artifact có thẩm quyền cho công việc tiếp theo là
@@ -34,8 +34,10 @@ Current roadmap:              docs/07-inference-runtime-and-agent-roadmap.md
 Current checkpoint/handoff:   docs/09-inference-runtime-implementation-handoff.md
 ~~~
 
-Model Worker v1 vẫn là compatibility path single-model/fresh-context. Working
-tree hiện đã có multi-sequence native runtime, continuous scheduler,
+Model Worker v1 vẫn là compatibility path single-model/fresh-context và M0 đã
+được release-attest từ revision sạch
+`b38b6df32755c55e668ac11e6c8f3e8b1c2ad46b`. Code hiện đã có multi-sequence
+native runtime, continuous scheduler,
 priority/admission, prefix/session cache và backend registry/router. H0 trong
 `agent_runtime/` đã có durable contracts, reducer và SQLite event store. H1
 atomic read-only slice đã nối decision, compiler, permission, bounded executor,
@@ -66,32 +68,36 @@ Hai scheduler phải được tách:
 - Tool-using agent v1 chỉ một action mỗi turn; code authorize/execute.
 - Transcript, reasoning và KV cache không phải source of truth.
 
-## Working tree
+## Revision và working tree
 
-Tại thời điểm cập nhật handoff, repo có nhiều thay đổi code/test/docs chưa
-commit thuộc về người dùng. Session mới phải chạy:
+Runtime revision có thẩm quyền là
+`b38b6df32755c55e668ac11e6c8f3e8b1c2ad46b`. Nó đã đi qua clean consolidated
+gate và có evidence tại
+`release-evidence/b38b6df32755c55e668ac11e6c8f3e8b1c2ad46b/`. Các cập nhật tài liệu sau
+gate là documentation-only và không đổi binary/runtime đã được ký. Session mới
+vẫn phải chạy:
 
 ~~~powershell
 git status --short
 git diff --stat
 ~~~
 
-Không reset, checkout hoặc ghi đè các thay đổi đó. Docs 07/09 và
-`artifacts/inference-runtime/2026-07-15-m0-m7-final-verification.json` định danh
-checkpoint hiện tại; consolidated evidence cũ không đại diện cho revision chưa
-chốt.
-
-Requirement-by-requirement audit nằm ở
-`artifacts/inference-runtime/2026-07-15-m0-m7-requirement-audit.json`; audit này
-ghi rõ M1–M7 engineering pass và M0 release attestation vẫn pending.
+Không reset, checkout hoặc ghi đè thay đổi mới nếu có. Docs 07/09,
+`artifacts/inference-runtime/2026-07-16-m0-release-attestation.json` và
+`artifacts/inference-runtime/2026-07-16-handoff-index.json` định danh checkpoint
+hiện tại. Hai artifact `2026-07-15-m0-m7-final-verification.json` và
+`2026-07-15-m0-m7-requirement-audit.json` là audit pre-release được giữ làm lịch
+sử; trạng thái M0 pending trong chúng đã được supersede bởi attestation ngày
+2026-07-16.
 
 ## Công việc còn lại cho session kế tiếp
 
 Không viết lại H1 read-only slice. Bắt đầu từ evidence hiện có và thực hiện theo
 thứ tự:
 
-1. Review working tree; chỉ khi người dùng cho phép mới commit và chạy clean
-   consolidated M0 release gate.
+1. Xác minh release attestation/hash khi chuyển session hoặc máy. Nếu
+   manifest/runtime/model/native identity đổi thì phải tạo gate mới; không chạy
+   lại M0 gate chỉ để bắt đầu H1 trên cùng identity.
 2. Đóng full H1 bằng một real local-model decision → allowlisted read/search
    tool → normalized observation → deterministic acceptance artifact.
 3. Chỉ triển khai mutation/approval matrix nếu người dùng chủ động mở scope;
@@ -101,7 +107,7 @@ Không ghép các việc trên với:
 
 - Task DAG/parallel agent (H2/H3).
 - Tuning kernel/KV allocator.
-- Tuyên bố M0 released trước clean consolidated gate.
+- Thay đổi model/runtime/native binary nhưng vẫn tái sử dụng attestation M0 cũ.
 - Tuyên bố M7 real-provider matrix pass khi môi trường chưa có provider thật.
 
 H1 phải tiếp tục dùng H0 làm source of truth và giữ pipeline: decision → strict

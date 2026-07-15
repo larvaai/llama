@@ -1,9 +1,10 @@
 # Inference Runtime và Agent Harness — roadmap hiện hành
 
-Ngày chốt: 2026-07-15.
+Ngày chốt kiến trúc: 2026-07-15. Cập nhật release: 2026-07-16.
 
-Trạng thái: **kiến trúc và roadmap chính thức; implementation checkpoint được
-ghi riêng trong `09-inference-runtime-implementation-handoff.md`**.
+Trạng thái: **kiến trúc và roadmap chính thức; M0 đã release-attest, M1–M7 đạt
+engineering gate; implementation checkpoint và giới hạn còn lại được ghi riêng
+trong `09-inference-runtime-implementation-handoff.md`**.
 
 Tài liệu này thay thế phần “thứ tự triển khai sau này” trong
 `03-progress-and-roadmap.md` và `05-controlled-inference-handoff.md`.
@@ -43,7 +44,7 @@ Production path gồm ba package/tầng:
 `controlled_inference/` là archive của prototype A–G, không phải production
 dependency.
 
-Đã implement trên working tree hiện tại:
+Đã implement trong codebase hiện tại:
 
 - M0 lifecycle/safety hardening: queue expiry/cancel race, bounded supervisor,
   readiness, IPC recovery, shutdown, prompt contract, reasoning capability và
@@ -73,11 +74,13 @@ dependency.
   normalization/redaction/artifact boundary, code-owned flow và deterministic
   acceptance cho `read_file`/`search_text`.
 
-Chưa được tuyên bố hoàn thành/release:
+Trạng thái release và giới hạn còn lại:
 
-- M0 chưa có consolidated release gate từ một revision sạch; fault, semantic
-  GPU và non-GPU slices trên working tree dirty là engineering evidence, không
-  phải release attestation.
+- M0 đã pass clean consolidated release gate tại revision
+  `b38b6df32755c55e668ac11e6c8f3e8b1c2ad46b`: unit/property/integration/native,
+  real fault injection, crash → `DEGRADED` → request-triggered recovery, GPU và
+  500/500 soak cùng verified identity; `failure_count=0`. Release summary SHA-256
+  là `dabead013b42a5f901bbe5ac5ea7a481a9a6eb4812331886688ff5426c9c9bf5`.
 - M3 long soak đã pass: 1.228 request trong 901,532 giây, không lỗi, RSS drift
   `1.024.000 byte`, dedicated VRAM process-scoped WDDM drift `0 MiB`, process
   generation ổn định và shutdown sạch.
@@ -99,17 +102,19 @@ Chưa được tuyên bố hoàn thành/release:
 - M7 portable architecture gate đã pass. Host Windows hiện tại không có
   MLX-LM/vLLM/SGLang runtime/server thật, nên real-provider execution matrix
   vẫn là deployment gate và không được tuyên bố pass.
-- H0 đã đạt engineering exit gate trên working tree dirty. H1 atomic read-only
+- H0 đã đạt engineering exit gate. H1 atomic read-only
   slice đã đạt engineering checkpoint với fake inference/executor, durable
   recovery và concrete allowlisted file tools. Full H1 chưa được tuyên bố vì
   chưa có real-local-model acceptance artifact; mutation/approval execution
   vẫn bị khóa. H2–H3 chưa bắt đầu implementation.
 
-Evidence index hiện hành nằm ở
-`artifacts/inference-runtime/2026-07-15-m0-m7-final-verification.json`; file này
-trỏ tới artifact M3–M7/H0/H1 và SHA-256 tương ứng. Tất cả vẫn ghi
-`working_tree_dirty=true`, vì vậy chỉ là engineering evidence, không phải
-release attestation.
+Release attestation hiện hành nằm ở
+`artifacts/inference-runtime/2026-07-16-m0-release-attestation.json` và
+`release-evidence/b38b6df32755c55e668ac11e6c8f3e8b1c2ad46b/`. Engineering evidence
+M3–M7/H0/H1 vẫn được index bởi
+`artifacts/inference-runtime/2026-07-15-m0-m7-final-verification.json`; các cờ
+`working_tree_dirty=true` trong artifact cũ mô tả đúng checkpoint pre-release và
+không phủ định attestation sạch ngày 2026-07-16.
 
 ## 3. Hai scheduler, hai state machine
 
@@ -523,12 +528,12 @@ production hardening đầy đủ dài hơn.
 | **M6 — Prefix/session cache, 3–4 tuần** | Tách immutable shared prefix và mutable session; exact-token key, model/template/tokenizer/adapter/context digest, refcount/COW, scope, TTL/LRU và byte budget. | Không cross-agent leak; invalidation đúng; đo hit rate, saved prefill, TTFT và VRAM; không giảm contract/semantic correctness. |
 | **M7 — Multi-model/backend, 3–5 tuần** | Capability registry, load/unload/keepalive và routing. Steppable adapter cho llama.cpp; managed adapter cho MLX-LM/vLLM/SGLang khi public API sở hữu full generation loop. Chỉ nâng backend thành steppable khi provider có lifecycle/step API ổn định. | Conformance suite chung; harness không phụ thuộc API KV/token-step riêng của llama.cpp và không advertise capability backend không có. |
 
-### 6.1 Implementation checkpoint 2026-07-15
+### 6.1 Implementation/release checkpoint 2026-07-16
 
 | Mốc | Code hiện tại | Exit gate |
 |---|---|---|
-| M0 | Functional hardening, native fault 2/2 và semantic GPU HTTP 3/3 pass trên dirty tree. | **Pending release:** revision sạch + consolidated recovery/500-request gate từ cùng identity. |
-| M1 | Event/telemetry/backpressure/cleanup đã implement; non-GPU regression pass. | **Engineering pass;** release attestation kế thừa clean M0 gate. |
+| M0 | Functional hardening, native fault, restart recovery, semantic GPU và 500-request soak cùng clean identity. | **Released:** consolidated gate pass tại `b38b6df32755c55e668ac11e6c8f3e8b1c2ad46b`, 500/500 và 0 failure. |
+| M1 | Event/telemetry/backpressure/cleanup đã implement và nằm trong cùng attested revision. | **Engineering pass;** clean M0 attestation đã hoàn tất. |
 | M2 | Ports, contracts và simulator đã implement; unit/property pass. | **Engineering pass.** |
 | M3 | Native 2/4/8 sequence, cancel isolation/slot reuse và soak 15 phút pass trên RTX 3080. | **Pass:** 1.228 request, 0 lỗi, RSS drift 1.024.000 byte, process VRAM drift 0 MiB, clean shutdown. |
 | M4 | Continuous batching và token timing evidence đã benchmark với cùng workload/binary. | **Pass:** `2,274732×` serial; `1,122704×` llama-server request; `1,064309×` token; ITL SLO pass. |
@@ -536,8 +541,10 @@ production hardening đầy đủ dài hơn.
 | M6 | Scoped longest-safe-prefix cache và immutable private session COW pass GPU/unit; cache on/off benchmark đo hit rate, saved prefill, TTFT, RSS/VRAM và cleanup. | **Pass:** correctness/performance đều đạt; WDDM dedicated process VRAM delta 4 MiB và cache bytes về 0 sau clear. |
 | M7 | Registry/router, llama.cpp steppable và managed vLLM/SGLang/MLX-LM pass portable conformance. | **Portable pass; deployment pending:** real provider matrix không khả dụng trên host này. |
 
-Trạng thái `pass` trong bảng này không thay thế Definition of Done hoặc release
-gate. Chỉ `summary.json` từ revision sạch mới được dùng để ký release.
+Trạng thái `pass` trong bảng này không thay thế Definition of Done. M0 chỉ được
+ký bởi `summary.json` của revision sạch nêu trên; M2–M7 vẫn là engineering/
+portable gates theo đúng cột giới hạn và không được hiểu là mọi deployment
+backend đều đã production-certify.
 
 ## 7. Roadmap Agent Harness
 

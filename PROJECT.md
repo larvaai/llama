@@ -14,15 +14,16 @@ Tài liệu:
 - [Historical artifact: M0 hardening start](docs/08-m0-implementation-handoff.md)
 - [Implementation checkpoint và handoff còn lại](docs/09-inference-runtime-implementation-handoff.md)
 
-Trạng thái hiện tại: Model Worker v1 đã tách khỏi prototype; working tree có
-Inference Runtime multi-sequence, continuous batching, governance,
-prefix/session cache và backend registry/router. M3–M6 đã đạt engineering gate
-trên RTX 3080; M7 đạt portable architecture gate, còn real provider matrix là
-deployment gate theo môi trường. H0 durable agent state và H1 atomic read-only
-tool slice đã đạt engineering gate; full H1 chưa được tuyên bố vì chưa có
-real-local-model acceptance artifact và mutation/approval execution vẫn bị
-khóa. `docs/07` là roadmap có thẩm quyền và `docs/09` là handoff hiện hành.
-Working tree chưa phải release sạch;
-Model Worker M0 chỉ được ký sau consolidated release gate từ cùng một revision
-sạch/manifest/runtime. Prototype Phase A–G trong `controlled_inference/` là
-archive, không được production package import.
+Trạng thái hiện tại: Model Worker M0 đã được release-attest từ revision sạch
+`b38b6df32755c55e668ac11e6c8f3e8b1c2ad46b` trên RTX 3080. Consolidated gate
+đã build đúng native binary, kiểm tra unit/property/integration/native/GPU/fault,
+chứng minh crash → `DEGRADED` → request-triggered recovery và chạy soak 500/500
+không lỗi cùng resource series. Inference Runtime multi-sequence, continuous
+batching, governance, prefix/session cache và backend registry/router đã đạt
+M1–M7 engineering gate; M7 real-provider matrix vẫn là deployment gate theo
+môi trường. H0 durable agent state và H1 atomic read-only tool slice đã đạt
+engineering gate; full H1 chưa được tuyên bố vì chưa có real-local-model
+acceptance artifact và mutation/approval execution vẫn bị khóa. `docs/07` là
+roadmap có thẩm quyền, `docs/09` là handoff hiện hành và
+`docs/model-worker-release.md` ghi release attestation. Prototype Phase A–G
+trong `controlled_inference/` là archive, không được production package import.
