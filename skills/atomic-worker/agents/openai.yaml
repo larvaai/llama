@@ -1,0 +1,4 @@
+interface:
+  display_name: "Atomic Worker"
+  short_description: "Execute one bounded task with strict output"
+  default_prompt: "Use $atomic-worker to execute exactly one small task."

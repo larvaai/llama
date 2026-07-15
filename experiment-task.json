@@ -1,0 +1,10 @@
+{
+  "goal": "Count the labels whose first character is A, ignoring case.",
+  "context": {
+    "labels": ["Alpha", "beta", "atlas", "Gamma"]
+  },
+  "allowed_actions": ["Read the supplied labels", "Count matching labels"],
+  "forbidden_actions": ["Add labels", "Explain the counting method", "Suggest other work"],
+  "expected_output": "An integer in result",
+  "acceptance_criteria": ["status equals completed", "result equals 2", "evidence is non-empty", "evidence has at most 80 characters"]
+}

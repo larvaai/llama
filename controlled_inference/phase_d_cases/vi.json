@@ -1,0 +1,7 @@
+{
+  "id": "vi",
+  "response_language": "vi",
+  "task_language": "vi",
+  "task": "Đếm các nhãn bắt đầu bằng chữ A, không phân biệt hoa thường: Alpha, beta, atlas, Gamma. Kết quả phải là 2.",
+  "expected_result": 2
+}

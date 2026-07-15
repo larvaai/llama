@@ -1,0 +1,32 @@
+{
+  "manifest_version": "model-manifest.v1",
+  "id": "qwen35-9b-local",
+  "gguf_path": "C:/path/outside/repository/model.gguf",
+  "gguf_sha256": "sha256:replace-with-model-sha256",
+  "runtime_build": "b10012",
+  "runtime": {
+    "directory": "C:/path/outside/repository/llama-b10012-runtime",
+    "llama_dll_sha256": "sha256:replace-with-llama-dll-sha256",
+    "abi": "llama.cpp-b10012-win-x64"
+  },
+  "context": {"n_ctx": 4096, "n_batch": 1024, "n_ubatch": 512, "training_context": 4096, "rope_scaling": null},
+  "gpu": {"layers": 99},
+  "sampling": {"profile": "greedy-v1"},
+  "reasoning": {"mode": "required_marker_sequence", "start_text": "<think>", "end_text": "</think>", "require_start": true},
+  "limits": {
+    "input_bytes": 262144,
+    "message_bytes": 131072,
+    "schema_bytes": 65536,
+    "instructions_bytes": 4096,
+    "client_request_id_bytes": 256,
+    "max_messages": 32,
+    "max_properties": 64,
+    "max_queue": 8,
+    "max_reasoning_tokens": 1024,
+    "max_final_tokens": 512,
+    "max_total_tokens": 1536,
+    "max_artifact_bytes": 1048576,
+    "total_artifact_bytes": 1073741824,
+    "artifact_retention_seconds": 604800
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "type": "object",
+  "properties": {
+    "status": {
+      "type": "string",
+      "enum": ["completed"]
+    },
+    "result": {
+      "type": "integer",
+      "enum": [2]
+    },
+    "evidence": {
+      "type": "string",
+      "enum": ["Quote: \"A\"; path: C:\\temp; line1\nline2"]
+    },
+    "reason": {
+      "type": "null"
+    }
+  },
+  "required": ["status", "result", "evidence", "reason"],
+  "additionalProperties": false
+}

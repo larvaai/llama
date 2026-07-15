@@ -1,0 +1,7 @@
+{
+  "id": "auto_en",
+  "response_language": "auto",
+  "task_language": "en",
+  "task": "Count labels starting with A, ignoring case: Alpha, beta, atlas, Gamma. The result must be 2.",
+  "expected_result": 2
+}

@@ -1,0 +1,29 @@
+{
+  "id": "chatcmpl-jnqrlyl5nms8eqbzxgpzna",
+  "object": "chat.completion",
+  "created": 1784024329,
+  "model": "qwen3.5-9b-claude-4.6-opus-uncensored-distilled",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "",
+        "reasoning_content": "{\"status\":\"completed\",\"result\":2,\"evidence\":\"Checked each label: 'Alpha' starts with 'A', 'beta' starts with 'b', 'atlas' (a)\",\"reason\":null}\n",
+        "tool_calls": []
+      },
+      "logprobs": null,
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 353,
+    "completion_tokens": 46,
+    "total_tokens": 399,
+    "completion_tokens_details": {
+      "reasoning_tokens": 45
+    }
+  },
+  "stats": {},
+  "system_fingerprint": "qwen3.5-9b-claude-4.6-opus-uncensored-distilled"
+}

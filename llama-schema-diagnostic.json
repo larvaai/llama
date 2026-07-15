@@ -1,0 +1,117 @@
+{
+  "thinking": true,
+  "reasoning_format": "deepseek",
+  "runtime": "llama.cpp 0eca4d4 (LM Studio runtime 2.24.0)",
+  "passed": 0,
+  "failed": 12,
+  "results": [
+    {
+      "case": "one_boolean",
+      "status": "failed",
+      "seconds": 3.062,
+      "events": 251,
+      "reasoning_chars": 750,
+      "content_so_far": "{\n  \"ok\": true,\n  \"completed\": true,\n  \"result\": 2,\n  \"result_2\": 2,\n  \"",
+      "error": "JSONDecodeError: Unterminated string starting at: line 6 column 3 (char 71)"
+    },
+    {
+      "case": "status_only",
+      "status": "failed",
+      "seconds": 3.109,
+      "events": 251,
+      "reasoning_chars": 750,
+      "content_so_far": "{\n  \"status\": \"completed\",\n  \"result\": 2,\n  \"evidence\": \"Analyzed each label case-insensitively: 'Alpha",
+      "error": "JSONDecodeError: Unterminated string starting at: line 4 column 15 (char 56)"
+    },
+    {
+      "case": "status_enum",
+      "status": "failed",
+      "seconds": 3.172,
+      "events": 251,
+      "reasoning_chars": 750,
+      "content_so_far": "{\n  \"status\": \"completed\",\n  \"result\": 2,\n  \"evidence\": \"Analyzed each label case-insensitively: 'Alpha",
+      "error": "JSONDecodeError: Unterminated string starting at: line 4 column 15 (char 56)"
+    },
+    {
+      "case": "status_result",
+      "status": "failed",
+      "seconds": 3.031,
+      "events": 251,
+      "reasoning_chars": 750,
+      "content_so_far": "{\n  \"status\": \"completed\",\n  \"result\": 2,\n  \"evidence\": \"Analyzed each label case-insensitively: 'Alpha",
+      "error": "JSONDecodeError: Unterminated string starting at: line 4 column 15 (char 56)"
+    },
+    {
+      "case": "three_fields",
+      "status": "failed",
+      "seconds": 3.015,
+      "events": 251,
+      "reasoning_chars": 750,
+      "content_so_far": "{\n  \"status\": \"completed\",\n  \"result\": 2,\n  \"evidence\": \"Analyzed each label case-insensitively: 'Alpha",
+      "error": "JSONDecodeError: Unterminated string starting at: line 4 column 15 (char 56)"
+    },
+    {
+      "case": "four_fields",
+      "status": "failed",
+      "seconds": 3.047,
+      "events": 251,
+      "reasoning_chars": 750,
+      "content_so_far": "{\n  \"status\": \"completed\",\n  \"result\": 2,\n  \"evidence\": \"Analyzed each label case-insensitively: 'Alpha",
+      "error": "JSONDecodeError: Unterminated string starting at: line 4 column 15 (char 56)"
+    },
+    {
+      "case": "result_nullable",
+      "status": "failed",
+      "seconds": 3.031,
+      "events": 251,
+      "reasoning_chars": 750,
+      "content_so_far": "{\n  \"status\": \"completed\",\n  \"result\": 2,\n  \"evidence\": \"Analyzed each label case-insensitively: 'Alpha",
+      "error": "JSONDecodeError: Unterminated string starting at: line 4 column 15 (char 56)"
+    },
+    {
+      "case": "reason_nullable",
+      "status": "failed",
+      "seconds": 2.984,
+      "events": 251,
+      "reasoning_chars": 750,
+      "content_so_far": "{\n  \"status\": \"completed\",\n  \"result\": 2,\n  \"evidence\": \"Analyzed each label case-insensitively: 'Alpha",
+      "error": "JSONDecodeError: Unterminated string starting at: line 4 column 15 (char 56)"
+    },
+    {
+      "case": "both_nullable",
+      "status": "failed",
+      "seconds": 2.875,
+      "events": 251,
+      "reasoning_chars": 750,
+      "content_so_far": "{\n  \"status\": \"completed\",\n  \"result\": 2,\n  \"evidence\": \"Analyzed each label case-insensitively: 'Alpha",
+      "error": "JSONDecodeError: Unterminated string starting at: line 4 column 15 (char 56)"
+    },
+    {
+      "case": "with_enum",
+      "status": "failed",
+      "seconds": 2.891,
+      "events": 251,
+      "reasoning_chars": 750,
+      "content_so_far": "{\n  \"status\": \"completed\",\n  \"result\": 2,\n  \"evidence\": \"Analyzed each label case-insensitively: 'Alpha",
+      "error": "JSONDecodeError: Unterminated string starting at: line 4 column 15 (char 56)"
+    },
+    {
+      "case": "with_max_length",
+      "status": "failed",
+      "seconds": 2.875,
+      "events": 251,
+      "reasoning_chars": 750,
+      "content_so_far": "{\n  \"status\": \"completed\",\n  \"result\": 2,\n  \"evidence\": \"Analyzed each label case-insensitively: 'Alpha",
+      "error": "JSONDecodeError: Unterminated string starting at: line 4 column 15 (char 56)"
+    },
+    {
+      "case": "allow_extra",
+      "status": "failed",
+      "seconds": 2.875,
+      "events": 251,
+      "reasoning_chars": 750,
+      "content_so_far": "{\n  \"status\": \"completed\",\n  \"result\": 2,\n  \"evidence\": \"Analyzed each label case-insensitively: 'Alpha",
+      "error": "JSONDecodeError: Unterminated string starting at: line 4 column 15 (char 56)"
+    }
+  ]
+}

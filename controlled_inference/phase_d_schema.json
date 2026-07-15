@@ -1,0 +1,20 @@
+{
+  "type": "object",
+  "properties": {
+    "status": {
+      "type": "string",
+      "enum": ["completed", "blocked"]
+    },
+    "result": {
+      "type": ["integer", "null"]
+    },
+    "evidence": {
+      "type": "string"
+    },
+    "reason": {
+      "type": ["string", "null"]
+    }
+  },
+  "required": ["status", "result", "evidence", "reason"],
+  "additionalProperties": false
+}

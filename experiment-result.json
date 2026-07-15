@@ -1,0 +1,48 @@
+{
+  "model": "qwen3.5-9b-claude-4.6-opus-uncensored-distilled",
+  "task": {
+    "goal": "Count the labels whose first character is A, ignoring case.",
+    "context": {
+      "labels": [
+        "Alpha",
+        "beta",
+        "atlas",
+        "Gamma"
+      ]
+    },
+    "allowed_actions": [
+      "Read the supplied labels",
+      "Count matching labels"
+    ],
+    "forbidden_actions": [
+      "Add labels",
+      "Explain the counting method",
+      "Suggest other work"
+    ],
+    "expected_output": "An integer in result",
+    "acceptance_criteria": [
+      "status equals completed",
+      "result equals 2",
+      "evidence is non-empty",
+      "evidence has at most 80 characters"
+    ]
+  },
+  "output": {
+    "status": "completed",
+    "result": 2,
+    "evidence": "Checked 4 labels, found 2 starting with A (Alpha, atlas)",
+    "reason": null
+  },
+  "validation": {
+    "passed": true,
+    "errors": []
+  },
+  "usage": {
+    "prompt_tokens": 438,
+    "completion_tokens": 270,
+    "total_tokens": 708,
+    "completion_tokens_details": {
+      "reasoning_tokens": 233
+    }
+  }
+}

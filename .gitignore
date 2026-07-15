@@ -1,0 +1,39 @@
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.venv/
+*.egg-info/
+
+# Native build products
+build/
+build-*/
+out/
+*.obj
+*.o
+*.exe
+*.dll
+*.lib
+*.exp
+*.def
+
+# Runtime/model material is fetched or supplied out-of-tree
+artifacts/
+*.gguf
+*.zip
+controlled_inference/artifacts/
+controlled_inference/build/
+controlled_inference/vendor/official-b10012/
+
+# Local configuration and evidence
+config/model.local.json
+*.local.json
+release-evidence/
+*.log
+
+# Editors/OS
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
