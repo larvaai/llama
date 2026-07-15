@@ -11,6 +11,9 @@ from model_worker.manifest import load_manifest
 def pytest_addoption(parser):
     parser.addoption("--model-manifest", action="store", default=None, help="local verified model manifest for GPU tests")
     parser.addoption("--worker-url", action="store", default=None, help="running released worker URL for real-model tests")
+    parser.addoption("--native-executable", action="store", default=None, help="verified native worker executable for real-process fault tests")
+    parser.addoption("--runtime-manifest", action="store", default=None, help="verified inference runtime manifest for multi-sequence GPU tests")
+    parser.addoption("--runtime-executable", action="store", default=None, help="verified native inference runtime executable for multi-sequence GPU tests")
     parser.addoption("--require-gpu", action="store_true", default=False, help="fail instead of skip when GPU evidence is unavailable")
 
 

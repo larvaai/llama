@@ -2,6 +2,12 @@
 
 Ngày cập nhật: 2026-07-15.
 
+> **Trạng thái tài liệu:** archive/handoff của prototype Phase A–G. Các
+> invariant controlled inference vẫn có giá trị, nhưng thứ tự triển khai ở cuối
+> file không còn là roadmap hiện hành. Đọc `06-model-worker-v1-plan.md` cho
+> baseline worker, `07-inference-runtime-and-agent-roadmap.md` cho roadmap và
+> `09-inference-runtime-implementation-handoff.md` cho session tiếp theo.
+
 ## Mục tiêu
 
 Xây một lớp controlled inference mỏng trên llama.cpp cho agent harness:
@@ -19,7 +25,8 @@ Mục tiêu không phải xây lại toàn bộ LM Studio hoặc Ollama. llama.c
 
 ## Quyết định đã chốt
 
-- Thinking luôn được giữ.
+- Reasoning phase vẫn được generate và đếm để kiểm soát protocol; nội dung
+  reasoning không stream hoặc persist mặc định.
 - Grammar không được tác động lên thinking.
 - Chỉ final content được ép schema.
 - Chỉ chấp nhận final content; dữ liệu nằm riêng trong reasoning không được tính là output.

@@ -1,6 +1,12 @@
-# Tiến độ và roadmap
+# Tiến độ và roadmap lịch sử
 
 Ngày ghi nhận: 2026-07-14.
+
+> **Trạng thái tài liệu:** ghi lại quá trình nghiên cứu ban đầu qua LM Studio,
+> controlled inference và kế hoạch Model Worker v1. Không dùng phần “việc tiếp
+> theo” trong tài liệu này để điều phối session mới. Roadmap hiện hành nằm ở
+> `07-inference-runtime-and-agent-roadmap.md`; checkpoint/scope triển khai ngay
+> nằm ở `09-inference-runtime-implementation-handoff.md`.
 
 ## Trạng thái hiện tại
 

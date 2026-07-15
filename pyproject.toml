@@ -10,7 +10,7 @@ requires-python = ">=3.11"
 dependencies = []
 
 [project.optional-dependencies]
-test = ["pytest>=8.2", "hypothesis>=6.100"]
+test = ["pytest>=8.2", "hypothesis>=6.100", "coverage>=7.6"]
 lint = ["ruff>=0.5"]
 
 [project.scripts]
@@ -18,16 +18,25 @@ model-worker = "model_worker.cli:main"
 model-worker-validate-manifest = "model_worker.cli:validate_manifest_main"
 
 [tool.setuptools.packages.find]
-include = ["model_worker*"]
+include = ["model_worker*", "inference_runtime*", "agent_runtime*"]
 
 [tool.pytest.ini_options]
 addopts = "-ra --strict-markers"
 testpaths = ["tests"]
 markers = ["gpu: requires the configured llama.cpp runtime and model", "soak: long-running reliability test"]
 
+[tool.coverage.run]
+branch = true
+source = ["model_worker"]
+
+[tool.coverage.report]
+fail_under = 90
+show_missing = true
+
 [tool.ruff]
 target-version = "py311"
 line-length = 100
+exclude = ["artifacts", "build-*", "controlled_inference"]
 
 [tool.ruff.lint]
 ignore = ["E501", "E701", "E702"]

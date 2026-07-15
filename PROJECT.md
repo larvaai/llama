@@ -6,9 +6,23 @@ Tài liệu:
 
 - [Tầm nhìn](docs/01-vision.md)
 - [Kiến trúc](docs/02-architecture.md)
-- [Tiến độ và roadmap](docs/03-progress-and-roadmap.md)
-- [Session handoff](docs/04-session-handoff.md)
-- [Controlled inference handoff](docs/05-controlled-inference-handoff.md)
+- [Tiến độ lịch sử](docs/03-progress-and-roadmap.md)
+- [Session handoff index](docs/04-session-handoff.md)
+- [Controlled inference handoff — archive A–G](docs/05-controlled-inference-handoff.md)
 - [Kế hoạch Model Worker v1](docs/06-model-worker-v1-plan.md)
+- [Roadmap hiện hành: Inference Runtime và Agent Harness](docs/07-inference-runtime-and-agent-roadmap.md)
+- [Historical artifact: M0 hardening start](docs/08-m0-implementation-handoff.md)
+- [Implementation checkpoint và handoff còn lại](docs/09-inference-runtime-implementation-handoff.md)
 
-Trạng thái hiện tại: source tree Model Worker v1 đã được tách khỏi controlled-inference prototype, có API/IPC/manifest/output-contract version độc lập và reliability suite. Bản phát hành chỉ được ký khi `scripts/release_gate.ps1` có đủ evidence native, GPU và soak từ cùng manifest/runtime. Prototype Phase A–G trong `controlled_inference/` là archive, không được production package import.
+Trạng thái hiện tại: Model Worker v1 đã tách khỏi prototype; working tree có
+Inference Runtime multi-sequence, continuous batching, governance,
+prefix/session cache và backend registry/router. M3–M6 đã đạt engineering gate
+trên RTX 3080; M7 đạt portable architecture gate, còn real provider matrix là
+deployment gate theo môi trường. H0 durable agent state và H1 atomic read-only
+tool slice đã đạt engineering gate; full H1 chưa được tuyên bố vì chưa có
+real-local-model acceptance artifact và mutation/approval execution vẫn bị
+khóa. `docs/07` là roadmap có thẩm quyền và `docs/09` là handoff hiện hành.
+Working tree chưa phải release sạch;
+Model Worker M0 chỉ được ký sau consolidated release gate từ cùng một revision
+sạch/manifest/runtime. Prototype Phase A–G trong `controlled_inference/` là
+archive, không được production package import.

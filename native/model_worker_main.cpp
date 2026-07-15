@@ -1,4 +1,6 @@
 #include "llama.h"
+#include "generation_safety.h"
+#include "pending_cancel_registry.h"
 #include "reasoning_phase_controller.h"
 #include "nlohmann/json.hpp"
 
@@ -17,8 +19,11 @@
 
 using json = nlohmann::json;
 using model_worker::ControllerAction;
+using model_worker::GrammarSampleSource;
+using model_worker::PendingCancelRegistry;
 using model_worker::ReasoningPhase;
 using model_worker::ReasoningPhaseController;
+using model_worker::Utf8Accumulator;
 
 namespace {
 constexpr const char * IPC_VERSION = "model-worker-ipc.v1";
@@ -34,6 +39,7 @@ struct SharedControl {
     std::mutex mutex;
     std::condition_variable changed;
     std::queue<json> jobs;
+    PendingCancelRegistry pending_cancels;
     std::string active_request;
     std::string active_attempt;
     std::atomic_bool cancel{false};
@@ -67,19 +73,6 @@ std::string piece(const llama_vocab * vocab, llama_token token) {
     return count > 0 ? std::string(buffer.data(), static_cast<std::size_t>(count)) : std::string{};
 }
 
-bool valid_utf8(const std::string & bytes) {
-    const auto cont = [](unsigned char c) { return c >= 0x80 && c <= 0xBF; };
-    for (std::size_t i = 0; i < bytes.size();) {
-        const auto c = static_cast<unsigned char>(bytes[i]);
-        if (c <= 0x7f) { ++i; continue; }
-        if (c >= 0xc2 && c <= 0xdf && i + 1 < bytes.size() && cont(bytes[i + 1])) { i += 2; continue; }
-        if (c >= 0xe0 && c <= 0xef && i + 2 < bytes.size() && cont(bytes[i + 1]) && cont(bytes[i + 2])) { i += 3; continue; }
-        if (c >= 0xf0 && c <= 0xf4 && i + 3 < bytes.size() && cont(bytes[i + 1]) && cont(bytes[i + 2]) && cont(bytes[i + 3])) { i += 4; continue; }
-        return false;
-    }
-    return true;
-}
-
 void emit(const std::string & type, const std::string & request_id, const std::string & attempt_id,
           std::uint64_t sequence, const json & payload = json::object()) {
     json frame = payload;
@@ -98,7 +91,16 @@ void reader_loop(SharedControl & control) {
             if (type == "shutdown") { control.shutdown = true; control.cancel = true; control.changed.notify_all(); return; }
             if (type == "cancel") {
                 std::lock_guard lock(control.mutex);
-                if (frame.value("request_id", "") == control.active_request && frame.value("attempt_id", "") == control.active_attempt) control.cancel = true;
+                const auto key = std::make_pair(
+                    frame.value("request_id", ""),
+                    frame.value("attempt_id", "")
+                );
+                if (key.first.empty() || key.second.empty()) continue;
+                if (key.first == control.active_request && key.second == control.active_attempt) {
+                    control.cancel = true;
+                } else {
+                    control.pending_cancels.add(key);
+                }
                 continue;
             }
             if (type == "generate") {
@@ -111,12 +113,14 @@ void reader_loop(SharedControl & control) {
 
 json generate(llama_model * model, const llama_vocab * vocab, const json & manifest, const json & envelope,
               SharedControl & control, std::uint64_t & sequence) {
+    const auto request_started = std::chrono::steady_clock::now();
     const json & request = envelope.at("request");
     const json & limits = request.at("limits");
+    const json & model_messages = envelope.at("model_messages");
     const auto context_config = manifest.at("context");
     std::vector<std::string> roles, contents;
     std::vector<llama_chat_message> messages;
-    for (const auto & item : request.at("messages")) { roles.push_back(item.at("role")); contents.push_back(item.at("content")); }
+    for (const auto & item : model_messages) { roles.push_back(item.at("role")); contents.push_back(item.at("content")); }
     messages.reserve(roles.size());
     for (std::size_t i = 0; i < roles.size(); ++i) messages.push_back({roles[i].c_str(), contents[i].c_str()});
     const char * chat_template = llama_model_chat_template(model, nullptr);
@@ -144,6 +148,7 @@ json generate(llama_model * model, const llama_vocab * vocab, const json & manif
         prompt_decoded += count;
         emit("progress", control.active_request, control.active_attempt, sequence++, {{"phase", "prompt_decode"}, {"tokens", prompt_decoded}});
     }
+    const auto prompt_finished = std::chrono::steady_clock::now();
 
     const auto start = tokenize(vocab, manifest["reasoning"]["start_text"], false, true);
     const auto end = tokenize(vocab, manifest["reasoning"]["end_text"], false, true);
@@ -155,7 +160,8 @@ json generate(llama_model * model, const llama_vocab * vocab, const json & manif
     if (!reasoning || !final || !grammar) throw std::runtime_error("sampler_init_failed");
     llama_sampler_chain_add(final.get(), grammar); llama_sampler_chain_add(final.get(), llama_sampler_init_greedy());
     llama_sampler * active = reasoning.get();
-    std::string final_bytes, utf8_pending;
+    std::string final_bytes;
+    Utf8Accumulator utf8;
     llama_token last = prompt.back();
     bool prompt_already_decoded = true;
     auto last_heartbeat = std::chrono::steady_clock::now();
@@ -167,12 +173,25 @@ json generate(llama_model * model, const llama_vocab * vocab, const json & manif
         }
         prompt_already_decoded = false;
         const auto before = phase.phase();
-        const llama_token token = llama_sampler_sample(active, context.get(), -1);
+        llama_sampler * sampled_with = active;
+        const llama_token token = llama_sampler_sample(sampled_with, context.get(), -1);
         const bool eog = llama_vocab_is_eog(vocab, token);
-        const auto transition = phase.consume(token, eog, before == ReasoningPhase::final);
+        const auto source = sampled_with == final.get()
+            ? GrammarSampleSource::final_grammar
+            : GrammarSampleSource::unconstrained;
+        const auto transition = phase.consume(
+            token,
+            eog,
+            model_worker::grammar_acceptance_proven(eog, source)
+        );
         if (before == ReasoningPhase::final && !eog) {
-            const auto bytes = piece(vocab, token); final_bytes += bytes; utf8_pending += bytes;
-            if (valid_utf8(utf8_pending)) { emit("final_delta", control.active_request, control.active_attempt, sequence++, {{"delta", utf8_pending}}); utf8_pending.clear(); }
+            const auto bytes = piece(vocab, token);
+            final_bytes += bytes;
+            const auto appended = utf8.append(bytes);
+            if (!appended.valid) throw std::runtime_error("protocol_violation:invalid_utf8");
+            if (!appended.completed.empty()) {
+                emit("final_delta", control.active_request, control.active_attempt, sequence++, {{"delta", appended.completed}});
+            }
         }
         if (transition.action == ControllerAction::activate_final_grammar) {
             active = final.get(); emit("phase", control.active_request, control.active_attempt, sequence++, {{"phase", "final"}});
@@ -189,8 +208,11 @@ json generate(llama_model * model, const llama_vocab * vocab, const json & manif
         }
         last = token;
     }
-    if (phase.phase() != ReasoningPhase::done || !valid_utf8(final_bytes) || !utf8_pending.empty()) throw std::runtime_error("protocol_violation:incomplete_final");
-    return {{"final_text", final_bytes}, {"usage", {{"prompt_tokens", prompt.size()}, {"reasoning_tokens", phase.reasoning_tokens()}, {"final_tokens", phase.final_tokens()}, {"sampled_tokens", phase.sampled_tokens()}, {"context_limit", n_ctx}, {"context_headroom", n_ctx - prompt.size() - reserve - 8}}}};
+    if (phase.phase() != ReasoningPhase::done || !utf8.finish()) throw std::runtime_error("protocol_violation:incomplete_final");
+    const auto generation_finished = std::chrono::steady_clock::now();
+    const auto prompt_ms = std::chrono::duration<double, std::milli>(prompt_finished - request_started).count();
+    const auto generation_ms = std::chrono::duration<double, std::milli>(generation_finished - prompt_finished).count();
+    return {{"final_text", final_bytes}, {"usage", {{"prompt_tokens", prompt.size()}, {"reasoning_tokens", phase.reasoning_tokens()}, {"final_tokens", phase.final_tokens()}, {"sampled_tokens", phase.sampled_tokens()}, {"context_limit", n_ctx}, {"context_headroom", n_ctx - prompt.size() - reserve - 8}}}, {"timing", {{"prompt_decode_ms", prompt_ms}, {"generation_ms", generation_ms}}}};
 }
 }  // namespace
 
@@ -199,6 +221,13 @@ int main(int argc, char ** argv) {
     try {
         const json manifest = read_json_file(argv[1]);
         if (manifest.at("manifest_version") != "model-manifest.v1" || manifest.at("runtime_build") != "b10012") throw std::runtime_error("manifest_version_mismatch");
+        const auto & reasoning = manifest.at("reasoning");
+        if (reasoning.value("mode", "") != "required_marker_sequence") throw std::runtime_error("reasoning_mode_unsupported");
+        if (!reasoning.contains("require_start") ||
+            !reasoning.at("require_start").is_boolean() ||
+            !reasoning.at("require_start").get<bool>()) {
+            throw std::runtime_error("reasoning_require_start_invalid");
+        }
         llama_backend_init();
         auto mp = llama_model_default_params(); mp.n_gpu_layers = manifest.at("gpu").at("layers");
         ModelPtr model(llama_model_load_from_file(manifest.at("gguf_path").get_ref<const std::string &>().c_str(), mp));
@@ -214,7 +243,9 @@ int main(int argc, char ** argv) {
             {
                 std::unique_lock lock(control.mutex); control.changed.wait(lock, [&]{ return control.shutdown || !control.jobs.empty(); });
                 if (control.shutdown) break; frame = std::move(control.jobs.front()); control.jobs.pop();
-                control.active_request = frame.value("request_id", ""); control.active_attempt = frame.value("attempt_id", ""); control.cancel = false;
+                control.active_request = frame.value("request_id", ""); control.active_attempt = frame.value("attempt_id", "");
+                const auto key = std::make_pair(control.active_request, control.active_attempt);
+                control.cancel = control.pending_cancels.consume(key);
             }
             std::uint64_t sequence = 0;
             emit("started", control.active_request, control.active_attempt, sequence++);

@@ -1,5 +1,11 @@
 # Kế hoạch Model Worker v1
 
+> **Vai trò tài liệu:** baseline, trust boundary và release contract cho
+> single-model worker. Roadmap post-v1 hiện hành nằm ở
+> `07-inference-runtime-and-agent-roadmap.md`; checkpoint triển khai hiện hành
+> nằm ở `09-inference-runtime-implementation-handoff.md`. File 08 chỉ còn là
+> historical artifact lúc bắt đầu M0.
+
 ## 1. Quyết định phạm vi
 
 Mục tiêu của mốc tiếp theo là biến controlled-inference spike hiện tại thành một **single-model worker đáng tin cậy** trên llama.cpp.

@@ -61,10 +61,12 @@ def load_manifest(path: Path, *, verify_files: bool = True) -> ModelManifest:
     if data.get("sampling") != {"profile": "greedy-v1"}:
         raise WorkerError("worker_not_ready", "only greedy-v1 sampling is supported")
     reasoning = data["reasoning"]
-    if type(reasoning) is not dict or reasoning.get("mode") not in {"none", "required_marker_sequence"}:
-        raise WorkerError("worker_not_ready", "unsupported reasoning mode")
-    if reasoning["mode"] == "required_marker_sequence" and any(type(reasoning.get(k)) is not str or not reasoning[k] for k in ("start_text", "end_text")):
+    if type(reasoning) is not dict or reasoning.get("mode") != "required_marker_sequence":
+        raise WorkerError("worker_not_ready", "model-manifest.v1 requires reasoning marker sequences")
+    if any(type(reasoning.get(k)) is not str or not reasoning[k] for k in ("start_text", "end_text")):
         raise WorkerError("worker_not_ready", "reasoning markers must be non-empty strings")
+    if reasoning.get("require_start") is not True:
+        raise WorkerError("worker_not_ready", "reasoning.require_start must be exactly true")
     if verify_files:
         _verify_sha(Path(data["gguf_path"]), data["gguf_sha256"], "model")
         _verify_sha(Path(data["runtime"]["directory"]) / "llama.dll", data["runtime"]["llama_dll_sha256"], "runtime")
@@ -85,8 +87,6 @@ def verify_capabilities(manifest: ModelManifest, provider: CapabilityProvider) -
         raise WorkerError("worker_not_ready", "model chat template is missing")
     if provider.model_context() < manifest.context["n_ctx"]:
         raise WorkerError("worker_not_ready", "declared context exceeds model capability")
-    if manifest.reasoning["mode"] == "none":
-        return (), ()
     start = tuple(provider.tokenize(manifest.reasoning["start_text"]))
     end = tuple(provider.tokenize(manifest.reasoning["end_text"]))
     if not start or not end or start == end:
@@ -98,16 +98,7 @@ def enforce_request_envelope(request: Any, manifest: ModelManifest) -> None:
     if request.model_id != manifest.id:
         raise WorkerError("invalid_request", "model_id does not match resident model")
     limits = manifest.limits
-    if len(request.messages) > limits["max_messages"]:
-        raise WorkerError("request_too_large", "too many messages")
-    total = 0
-    for message in request.messages:
-        size = len(message.content.encode("utf-8"))
-        total += size
-        if size > limits["message_bytes"]:
-            raise WorkerError("request_too_large", "message exceeds byte limit")
-    if total > limits["input_bytes"]:
-        raise WorkerError("request_too_large", "input exceeds byte limit")
+    enforce_message_envelope(request.messages, manifest)
     if len(request.output_contract.instructions.encode("utf-8")) > limits["instructions_bytes"]:
         raise WorkerError("request_too_large", "contract instructions exceed byte limit")
     schema_size = len(json.dumps(request.output_contract.schema, ensure_ascii=False).encode("utf-8"))
@@ -118,3 +109,17 @@ def enforce_request_envelope(request: Any, manifest: ModelManifest) -> None:
     pairs = ((request.limits.reasoning_tokens, "max_reasoning_tokens"), (request.limits.final_tokens, "max_final_tokens"), (request.limits.total_tokens, "max_total_tokens"))
     if any(actual > limits[name] for actual, name in pairs):
         raise WorkerError("invalid_request", "requested token budget exceeds manifest policy")
+
+
+def enforce_message_envelope(messages: Any, manifest: ModelManifest) -> None:
+    limits = manifest.limits
+    if len(messages) > limits["max_messages"]:
+        raise WorkerError("request_too_large", "too many messages")
+    total = 0
+    for message in messages:
+        size = len(message.content.encode("utf-8"))
+        total += size
+        if size > limits["message_bytes"]:
+            raise WorkerError("request_too_large", "message exceeds byte limit")
+    if total > limits["input_bytes"]:
+        raise WorkerError("request_too_large", "input exceeds byte limit")

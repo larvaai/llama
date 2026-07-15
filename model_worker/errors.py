@@ -10,6 +10,7 @@ ERROR_HTTP_STATUS = {
     "unsupported_contract": 422,
     "context_overflow": 422,
     "queue_full": 429,
+    "slow_consumer": 429,
     "queue_timeout": 408,
     "cancelled": 409,
     "deadline_exceeded": 504,
@@ -22,7 +23,7 @@ ERROR_HTTP_STATUS = {
 }
 
 RETRYABLE = {
-    "queue_full", "queue_timeout", "deadline_exceeded", "decode_failed",
+    "queue_full", "queue_timeout", "slow_consumer", "deadline_exceeded", "decode_failed",
     "worker_crashed", "worker_not_ready", "shutdown",
 }
 

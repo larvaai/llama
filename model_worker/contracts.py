@@ -116,7 +116,7 @@ class GenerateResult:
     output_valid: bool
     output: Any
     usage: dict[str, int]
-    timing: dict[str, int | float]
+    timing: dict[str, Any]
     model: dict[str, Any]
     error: dict[str, Any] | None = None
 

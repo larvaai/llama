@@ -1,0 +1,21 @@
+{
+  "runtime_manifest_version": "inference-runtime.v1",
+  "backend_id": "llama-cpp-b10012-local",
+  "model_manifest": "model.local.json",
+  "model_manifest_digest": "sha256:replace-with-canonical-model-manifest-digest",
+  "scheduler": {
+    "max_sequences": 8,
+    "cpu_threads": 12,
+    "kv_tokens": 8192,
+    "prefill_chunk_tokens": 256,
+    "max_decode_batch": 8,
+    "decode_quantum_tokens": 8,
+    "tick_token_budget": 512
+  },
+  "cache": {
+    "enabled": true,
+    "byte_budget": 536870912,
+    "max_entries": 16,
+    "ttl_seconds": 900
+  }
+}
