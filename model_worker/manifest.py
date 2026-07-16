@@ -2,12 +2,22 @@ from __future__ import annotations
 
 import hashlib
 import json
+import sys
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Protocol
 
 from .errors import WorkerError
 from .strict_json import loads
+
+
+def default_runtime_library() -> str:
+    """Platform-native shared library name produced by a llama.cpp build."""
+    if sys.platform == "darwin":
+        return "libllama.dylib"
+    if sys.platform == "win32":
+        return "llama.dll"
+    return "libllama.so"
 
 
 class CapabilityProvider(Protocol):
@@ -68,8 +78,11 @@ def load_manifest(path: Path, *, verify_files: bool = True) -> ModelManifest:
     if reasoning.get("require_start") is not True:
         raise WorkerError("worker_not_ready", "reasoning.require_start must be exactly true")
     if verify_files:
+        runtime = data["runtime"]
+        library = runtime.get("library", default_runtime_library())
+        library_sha = runtime.get("library_sha256", runtime.get("llama_dll_sha256"))
         _verify_sha(Path(data["gguf_path"]), data["gguf_sha256"], "model")
-        _verify_sha(Path(data["runtime"]["directory"]) / "llama.dll", data["runtime"]["llama_dll_sha256"], "runtime")
+        _verify_sha(Path(runtime["directory"]) / library, library_sha, "runtime")
     canonical = json.dumps(data, ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode()
     return ModelManifest(path.resolve(), data, "sha256:" + hashlib.sha256(canonical).hexdigest())
 

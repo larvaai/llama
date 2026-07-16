@@ -5,7 +5,17 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import sys
 from pathlib import Path
+
+
+def default_runtime_library() -> str:
+    """Platform-native shared library name produced by a llama.cpp build."""
+    if sys.platform == "darwin":
+        return "libllama.dylib"
+    if sys.platform == "win32":
+        return "llama.dll"
+    return "libllama.so"
 
 
 def sha256(path: Path) -> str:
@@ -22,11 +32,14 @@ def verify(manifest_path: Path) -> list[str]:
     if data.get("runtime_build") != "b10012":
         errors.append("runtime_build must be b10012")
     model = Path(data.get("gguf_path", ""))
-    runtime = Path(data.get("runtime", {}).get("directory", ""))
-    dll = runtime / "llama.dll"
+    runtime_data = data.get("runtime", {})
+    runtime = Path(runtime_data.get("directory", ""))
+    library_name = runtime_data.get("library", default_runtime_library())
+    library = runtime / library_name
+    library_sha = runtime_data.get("library_sha256", runtime_data.get("llama_dll_sha256"))
     for label, path, expected in (
         ("model", model, data.get("gguf_sha256")),
-        ("llama.dll", dll, data.get("runtime", {}).get("llama_dll_sha256")),
+        (library_name, library, library_sha),
     ):
         if not path.is_file():
             errors.append(f"{label} not found: {path}")

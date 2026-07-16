@@ -1,13 +1,14 @@
 {
   "manifest_version": "model-manifest.v1",
   "id": "qwen35-9b-local",
-  "gguf_path": "C:/path/outside/repository/model.gguf",
+  "gguf_path": "/path/outside/repository/model.gguf",
   "gguf_sha256": "sha256:replace-with-model-sha256",
   "runtime_build": "b10012",
   "runtime": {
-    "directory": "C:/path/outside/repository/llama-b10012-runtime",
-    "llama_dll_sha256": "sha256:replace-with-llama-dll-sha256",
-    "abi": "llama.cpp-b10012-win-x64"
+    "directory": "/path/outside/repository/llama-b10012-runtime",
+    "library": "libllama.dylib",
+    "library_sha256": "sha256:replace-with-libllama-dylib-sha256",
+    "abi": "llama.cpp-b10012-macos-arm64"
   },
   "context": {"n_ctx": 4096, "n_batch": 1024, "n_ubatch": 512, "training_context": 4096, "rope_scaling": null},
   "gpu": {"layers": 99},

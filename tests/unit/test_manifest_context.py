@@ -10,7 +10,7 @@ import pytest
 from model_worker.context import decode_prompt, preflight_context, prompt_chunks
 from model_worker.errors import WorkerError
 from model_worker.contracts import GenerateRequest
-from model_worker.manifest import ModelManifest, enforce_request_envelope, load_manifest, verify_capabilities
+from model_worker.manifest import ModelManifest, default_runtime_library, enforce_request_envelope, load_manifest, verify_capabilities
 from model_worker.preflight import preflight
 from model_worker.prompt import PROMPT_CONTRACT_VERSION
 
@@ -102,13 +102,13 @@ def test_manifest_verifies_model_and_runtime_hashes(tmp_path):
     model.write_bytes(b"model")
     runtime = tmp_path / "runtime"
     runtime.mkdir()
-    dll = runtime / "llama.dll"
-    dll.write_bytes(b"runtime")
+    library = runtime / default_runtime_library()
+    library.write_bytes(b"runtime")
     data = json.loads(Path("config/model.example.json").read_text(encoding="utf-8"))
     data["gguf_path"] = str(model)
     data["gguf_sha256"] = "sha256:" + hashlib.sha256(model.read_bytes()).hexdigest()
     data["runtime"]["directory"] = str(runtime)
-    data["runtime"]["llama_dll_sha256"] = "sha256:" + hashlib.sha256(dll.read_bytes()).hexdigest()
+    data["runtime"]["library_sha256"] = "sha256:" + hashlib.sha256(library.read_bytes()).hexdigest()
     loaded = load_manifest(write_manifest(tmp_path, data))
     assert loaded.id == data["id"]
     assert loaded.digest.startswith("sha256:")
