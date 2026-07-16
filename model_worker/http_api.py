@@ -75,7 +75,8 @@ class ModelWorkerHTTPServer(ThreadingHTTPServer):
     def process_request_thread(self, request, client_address):
         if not self.handler_slots.acquire(blocking=False):
             try: request.close()
-            finally: return
+            except OSError: pass
+            return
         try: super().process_request_thread(request, client_address)
         finally: self.handler_slots.release()
 
